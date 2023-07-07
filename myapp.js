@@ -14,6 +14,11 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
+<<<<<<< HEAD
   console.log("ID123 Hello Name");
   console.log("Hello ID007");
+=======
+  console.log('ID123 Hello Name');
+  console.log('Hello ID007');
+>>>>>>> a98504c76a78015173246b0132080fff8d9a83ea
 });
