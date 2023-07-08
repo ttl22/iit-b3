@@ -63,12 +63,12 @@ app.get('/cart/show', (req, res) => {
 });
 
 // Serve the cart.html file
-app.get('/', (req, res) => {
+app.get('/showcart', (req, res) => {
     res.sendFile(path.join(__dirname, 'cart.html'));
 });
 
 // Start the server
-const port = 3000;
+const port = 3001;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
