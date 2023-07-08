@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Cart Form</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+        }
+    
+        form {
+          display: flex;
+          flex-direction: column;
+          max-width: 300px;
+          margin-bottom: 20px;
+        }
+    
+        label {
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+    
+        input[type="text"] {
+          padding: 8px;
+          margin-bottom: 10px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+        }
+    
+        button[type="submit"] {
+          padding: 8px 12px;
+          background-color: #4CAF50;
+          color: #fff;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+    
+        button[type="submit"]:hover {
+          background-color: #45a049;
+        }
+      </style>
+</head>
+
+<body>
+    <h1>Cart Form</h1>
+
+    <!-- Add Item Form -->
+    <h2>Add Item</h2>
+    <form id="addForm" action="/cart/add" method="POST">
+        <input type="text" name="cartItem" placeholder="Item name" value="" required>
+        <button type="submit">Add</button>
+    </form>
+
+    <!-- Remove Item Form -->
+    <h2>Remove Item</h2>
+    <form id="removeForm" action="/cart/remove" method="POST">
+        <input type="text" name="id" placeholder="Item ID" value="" required>
+        <button type="submit">Remove</button>
+    </form>
+
+    <!-- Show Items Button -->
+    <h2>Show Items</h2>
+    <button id="showButton">Show Items</button>
+
+    <!-- Display Cart Items -->
+    <h2>Cart Items</h2>
+    <ul id="cartItems"></ul>
+
+    <script>
+        // Handle form submissions
+        document.getElementById('addForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const item = form.elements.cartItem.value;
+            addItem(item);
+            form.reset();
+        });
+
+        document.getElementById('removeForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const id = form.elements.id.value;
+            removeItem(id);
+            form.reset();
+        });
+
+        // Handle show items button click
+        document.getElementById('showButton').addEventListener('click', () => {
+            showItems();
+        });
+
+        // Function to add an item to the cart
+        function addItem(item) {
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ item })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    showItems();
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+
+        // Function to remove an item from the cart
+        function removeItem(id) {
+            fetch(`/cart/remove/${id}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    showItems();
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+
+        // Function to show the cart items
+        function showItems() {
+            fetch('/cart/show')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    const cartItemsElement = document.getElementById('cartItems');
+                    cartItemsElement.innerHTML = '';
+                    data.forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = '#'+item.id+' '+item.item;
+                        cartItemsElement.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+    </script>
+</body>
+
+</html>
