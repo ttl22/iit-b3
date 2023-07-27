@@ -3,54 +3,79 @@ const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const path = require('path');
 
-// Create an Express app
 const app = express();
 app.use(bodyParser.json());
 
-// Create a new SQLite database
 const db = new sqlite3.Database(':memory:');
 
-// Create the 'cart' table
 db.run(`
   CREATE TABLE IF NOT EXISTS cart (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    item TEXT
+    item_name TEXT,
+    item_quantity INTEGER
   )
 `);
 
-// Add an item to the cart
 app.post('/cart/add', (req, res) => {
-    const { item } = req.body;
+    const { item_name, item_quantity } = req.body;
 
-    if (!item) {
-        return res.status(400).json({ error: 'Missing item parameter' });
+    if (!item_name || !item_quantity) {
+        return res.status(400).json({ error: 'Missing item_name or item_quantity parameter' });
     }
 
-    db.run('INSERT INTO cart (item) VALUES (?)', [item], (err) => {
+    db.get('SELECT * FROM cart WHERE item_name = ?', [item_name], (err, existingItem) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ error: 'Failed to add item to cart' });
         }
 
-        res.json({ message: 'Item added to cart successfully' });
+        if (existingItem) {
+            const updatedQuantity = existingItem.item_quantity + item_quantity;
+            db.run('UPDATE cart SET item_quantity = ? WHERE id = ?', [updatedQuantity, existingItem.id], (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: 'Failed to update item quantity in cart' });
+                }
+
+                res.json({ message: 'Item quantity updated in cart' });
+            });
+        } else {
+            db.run('INSERT INTO cart (item_name, item_quantity) VALUES (?, ?)', [item_name, item_quantity], (err) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: 'Failed to add item to cart' });
+                }
+
+                res.json({ message: 'Item added to cart successfully' });
+            });
+        }
     });
 });
 
-// Remove an item from the cart
 app.delete('/cart/remove/:id', (req, res) => {
-    const { id } = req.params;
+    const itemId = req.params.id;
 
-    db.run('DELETE FROM cart WHERE id = ?', [id], (err) => {
+    db.get('SELECT * FROM cart WHERE id = ?', [itemId], (err, existingItem) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ error: 'Failed to remove item from cart' });
         }
 
-        res.json({ message: 'Item removed from cart successfully' });
+        if (!existingItem) {
+            return res.status(404).json({ error: 'Item not found in cart' });
+        }
+
+        db.run('DELETE FROM cart WHERE id = ?', [itemId], (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Failed to remove item from cart' });
+            }
+
+            res.json({ message: 'Item removed from cart successfully' });
+        });
     });
 });
 
-// Show the items in the cart
 app.get('/cart/show', (req, res) => {
     db.all('SELECT * FROM cart', (err, rows) => {
         if (err) {
@@ -62,12 +87,10 @@ app.get('/cart/show', (req, res) => {
     });
 });
 
-// Serve the cart.html file
 app.get('/showcart', (req, res) => {
     res.sendFile(path.join(__dirname, 'cart.html'));
 });
 
-// Start the server
 const port = 3001;
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
