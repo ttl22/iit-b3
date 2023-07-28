@@ -16,21 +16,25 @@ db.run(`
   )
 `);
 
-app.post('/cart/add', (req, res) => {
-    const { item_name, item_quantity } = req.body;
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'cart.html'));
+});
 
-    if (!item_name || !item_quantity) {
+app.post('/cart/add', (req, res) => {
+    const { cartItem, itemQty } = req.body;
+
+    if (!cartItem || !itemQty) {
         return res.status(400).json({ error: 'Missing item_name or item_quantity parameter' });
     }
 
-    db.get('SELECT * FROM cart WHERE item_name = ?', [item_name], (err, existingItem) => {
+    db.get('SELECT * FROM cart WHERE item_name = ?', [cartItem], (err, existingItem) => {
         if (err) {
             console.error(err);
             return res.status(500).json({ error: 'Failed to add item to cart' });
         }
 
         if (existingItem) {
-            const updatedQuantity = existingItem.item_quantity + item_quantity;
+            const updatedQuantity = existingItem.item_quantity + parseInt(itemQty);
             db.run('UPDATE cart SET item_quantity = ? WHERE id = ?', [updatedQuantity, existingItem.id], (err) => {
                 if (err) {
                     console.error(err);
@@ -40,7 +44,7 @@ app.post('/cart/add', (req, res) => {
                 res.json({ message: 'Item quantity updated in cart' });
             });
         } else {
-            db.run('INSERT INTO cart (item_name, item_quantity) VALUES (?, ?)', [item_name, item_quantity], (err) => {
+            db.run('INSERT INTO cart (item_name, item_quantity) VALUES (?, ?)', [cartItem, parseInt(itemQty)], (err) => {
                 if (err) {
                     console.error(err);
                     return res.status(500).json({ error: 'Failed to add item to cart' });
@@ -85,10 +89,6 @@ app.get('/cart/show', (req, res) => {
 
         res.json(rows);
     });
-});
-
-app.get('/showcart', (req, res) => {
-    res.sendFile(path.join(__dirname, 'cart.html'));
 });
 
 const port = 3001;

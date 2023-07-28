@@ -75,7 +75,8 @@
             event.preventDefault();
             const form = event.target;
             const item = form.elements.cartItem.value;
-            addItem(item);
+            const qty = form.elements.itemQty.value;
+            addItem(item, qty);
             form.reset();
         });
 
@@ -93,13 +94,13 @@
         });
 
         // Function to add an item to the cart
-        function addItem(item) {
+        function addItem(item, qty) {
             fetch('/cart/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ item })
+                body: JSON.stringify({ 'cartItem' : item, 'itemQty' : qty })
             })
                 .then(response => response.json())
                 .then(data => {
@@ -135,8 +136,9 @@
                     const cartItemsElement = document.getElementById('cartItems');
                     cartItemsElement.innerHTML = '';
                     data.forEach(item => {
+                        console.log()
                         const li = document.createElement('li');
-                        li.textContent = '#'+item.id+' '+item.item;
+                        li.textContent = '#'+item.id+' '+item.item_name+' '+item.item_quantity;
                         cartItemsElement.appendChild(li);
                     });
                 })
