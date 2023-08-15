@@ -5,6 +5,7 @@ const path = require('path');
 
 const app = express();
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 const db = new sqlite3.Database(':memory:');
 
@@ -17,7 +18,7 @@ db.run(`
 `);
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'cart.html'));
+    res.sendFile(path.join(__dirname, 'public', 'cart.html'));
 });
 
 app.post('/cart/add', (req, res) => {
